@@ -28,6 +28,8 @@ public class Robot extends TimedRobot {
   private final VictorSP m_shooter = new VictorSP(5);
   private final VictorSP m_collector = new VictorSP(4);
   
+  boolean m_timer_lifter_control = false;   // Track if we're controlling the lifter with the timer
+  double m_lifter_speed = 0;                // Track the speed we are across loops
   
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -152,13 +154,28 @@ public class Robot extends TimedRobot {
     
 
 if (m_stick.getRawButton(5)) {
-  m_lifter.set(0.5); // 60% forward
-} else if (m_stick.getRawButton(6))  {
-  m_lifter.set(-0.5); // 60% backwards
-} else {
-  m_lifter.set(0);
+    m_timer.reset();                      // Reset the timer to zero
+    m_timer.start();                      // Start the timer
+    m_timer_lifter_control = true;        // Say we want the timer to be controlling the lifter
+    m_lifter_speed = 0.5; // 60% forward  // Speed it will be moving
+} else if (m_stick.getRawButton(6))  {    // Repeat of above, but with speed negative
+    m_timer.reset();
+    m_timer.start();
+    m_timer_lifter_control = true;
+    m_lifter_speed = -0.5; // 60% backwards
+} 
+if (m_timer_lifter_control && m_timer.get() > 2) {  // If we're under timer control, and the timers reached 2 seconds
+    m_timer_lifter_control = false;                 // Stop using the timer
 }
 
+
+if (m_timer_lifter_control) {                       // If we're under control by the timer
+    m_lifter.set(m_lifter_speed);                   // Use the speed its last been set to
+}
+else {
+    m_lifter.set(0);                                // Otherwise stop
+}
+    
 if (m_stick.getRawButton(3)) {
   m_shooter.set(0.6); // 60% forward
 } else if (m_stick.getRawButton(4))  {
